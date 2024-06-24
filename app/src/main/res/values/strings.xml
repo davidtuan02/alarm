@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">My Alarm</string>
+    <string name="action_gioquocte">Giờ Quốc tế</string>
+    <string name="action_baothuc">Báo thức</string>
+    <string name="action_giodingu">Giờ đi ngủ</string>
+    <string name="action_bamgio">Bấm giờ</string>
+    <string name="action_hengio">Hẹn giờ</string>
+</resources>

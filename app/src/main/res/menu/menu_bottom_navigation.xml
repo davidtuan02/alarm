@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+    <item android:id="@+id/gioquocte"
+        android:title="@string/action_gioquocte"
+        android:icon="@drawable/gioquocte"/>
+
+    <item android:id="@+id/baothuc"
+        android:title="@string/action_baothuc"
+        android:icon="@drawable/baothuc"/>
+
+    <item android:id="@+id/giodingu"
+        android:title="@string/action_giodingu"
+        android:icon="@drawable/giodingu"/>
+
+    <item android:id="@+id/bamgio"
+        android:title="@string/action_bamgio"
+        android:icon="@drawable/bamgio"/>
+
+    <item android:id="@+id/hengio"
+        android:title="@string/action_hengio"
+        android:icon="@drawable/hengio"/>
+
+</menu>

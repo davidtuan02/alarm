@@ -1,0 +1,13 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#FDFDFD"/> <!-- Màu nền của hình tròn -->
+            <size android:width="30dp" android:height="30dp"/> <!-- Kích thước của hình tròn -->
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#FDFDFD"/> <!-- Màu của hình tròn -->
+        </shape>
+    </item>
+</layer-list>

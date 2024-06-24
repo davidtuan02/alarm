@@ -1,0 +1,19 @@
+<!-- res/drawable/switch_track.xml -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Áp dụng khi Switch ở trạng thái "checked" (bật) -->
+    <item android:state_checked="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#7DEF82"/> <!-- Màu khi Switch được bật -->
+            <corners android:radius="30dp"/> <!-- Góc bo 30dp -->
+            <size android:width="15dp"></size>
+        </shape>
+    </item>
+    <!-- Áp dụng khi Switch ở trạng thái "unchecked" (tắt) -->
+    <item android:state_checked="false">
+        <shape android:shape="rectangle">
+            <solid android:color="#BDBDBD"/> <!-- Màu khi Switch tắt -->
+            <corners android:radius="30dp"/> <!-- Góc bo 30dp -->
+            <size android:width="15dp"></size>
+        </shape>
+    </item>
+</selector>
