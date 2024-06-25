@@ -7,8 +7,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
 import android.widget.NumberPicker;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -18,7 +16,6 @@ import java.io.InputStream;
 
 public class Add_Alarm_Activity extends AppCompatActivity {
 
-    private static final int REQUEST_CODE_EDIT_LABEL = 123;
     private SQL dbHelper;
     private NumberPicker numberPickerHour;
     private NumberPicker numberPickerMinute;
@@ -28,25 +25,24 @@ public class Add_Alarm_Activity extends AppCompatActivity {
     private TextView btn_Ambao;
     private TextView tv_Luu, tv_Huy;
 
-    // Biến để lưu trữ giờ và phút đã chọn
+    // Variables to store selected hour and minute
     private String selectedHour;
     private String selectedMinute;
 
-    private String selectedDays = "";
+    // Variables to store selected days of repeat
+    private String selectedDays = "0000000"; // Default: no repeat
 
-    // Biến để lưu trữ trạng thái của công tắc lặp lại
-    private boolean isRepeatEnabled;
-
-    // Biến để lưu trữ tùy chọn nhãn và âm báo
+    // Variables to store label and sound
     private String selectedLabel = "";
     private InputStream selectedSound = null;
 
-    // Biến để lưu trữ trạng thái lặp lại
-    private String repeatState = "Không";
-
-    // ActivityResultLauncher cho màn hình sửa nhãn và âm báo
+    // ActivityResultLauncher for label editing screen
     private ActivityResultLauncher<Intent> mEditLabelLauncher;
+
+    // ActivityResultLauncher for sound selection screen
     private ActivityResultLauncher<Intent> mEditSoundLauncher;
+
+    // ActivityResultLauncher for repeat selection screen
     private ActivityResultLauncher<Intent> mEditRepeatLauncher;
 
     @Override
@@ -56,16 +52,17 @@ public class Add_Alarm_Activity extends AppCompatActivity {
 
         dbHelper = new SQL(this);
 
-        // Ánh xạ các thành phần giao diện
-        anhXa();
+        // Map UI elements
+        mapUI();
 
-        // Khởi tạo các NumberPicker và Switch
+        // Initialize NumberPickers and Switch
         initNumberPickersAndSwitch();
 
+        // Set default values for hour and minute pickers
         selectedHour = Integer.toString(numberPickerHour.getValue());
         selectedMinute = Integer.toString(numberPickerMinute.getValue());
 
-        // Khởi tạo ActivityResultLauncher cho màn hình sửa nhãn
+        // Initialize ActivityResultLauncher for label editing
         mEditLabelLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -73,7 +70,7 @@ public class Add_Alarm_Activity extends AppCompatActivity {
                         Intent data = result.getData();
                         if (data != null) {
                             String editedLabel = data.getStringExtra("label");
-                            if(editedLabel.equals("")) {
+                            if (editedLabel.equals("")) {
                                 btn_nhan.setText("Báo thức");
                                 selectedLabel = "Báo thức";
                             } else {
@@ -84,7 +81,7 @@ public class Add_Alarm_Activity extends AppCompatActivity {
                     }
                 });
 
-        // Khởi tạo ActivityResultLauncher cho màn hình chọn âm báo
+        // Initialize ActivityResultLauncher for sound selection
         mEditSoundLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -93,23 +90,22 @@ public class Add_Alarm_Activity extends AppCompatActivity {
                         if (data != null) {
                             String selectedRingtone = data.getStringExtra("selectedRingtone");
 
-                            if(selectedRingtone.equals("Thức dậy cho tao")) {
+                            if (selectedRingtone.equals("Thức dậy cho tao")) {
                                 InputStream inputStream = getResources().openRawResource(R.raw.sena);
                                 selectedSound = inputStream;
                                 btn_Ambao.setText(selectedRingtone);
-                            }
-                            else if(selectedRingtone.equals("Quân đội")) {
+                            } else if (selectedRingtone.equals("Quân đội")) {
                                 InputStream inputStream = getResources().openRawResource(R.raw.quandoi);
                                 selectedSound = inputStream;
                                 btn_Ambao.setText(selectedRingtone);
-                            }
-                            else {
+                            } else {
                                 btn_Ambao.setText("Nhạc hay");
                             }
                         }
                     }
                 });
 
+        // Initialize ActivityResultLauncher for repeat selection
         mEditRepeatLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -118,14 +114,13 @@ public class Add_Alarm_Activity extends AppCompatActivity {
                         if (data != null) {
                             String repeat = data.getStringExtra("repeat");
                             repeat = repeat.trim();
-                            tv_Laplai.setText(repeat);
-                            repeatState = repeat; // Lưu trạng thái lặp lại
-                            selectedDays = repeat;
+                            updateRepeatTextView(repeat); // Update TextView for repeat display
+                            selectedDays = repeat; // Save repeat days string
                         }
                     }
                 });
 
-        // Lắng nghe sự kiện khi người dùng thay đổi giá trị của NumberPicker
+        // Listen to hour and minute picker changes
         numberPickerHour.setOnValueChangedListener((picker, oldVal, newVal) -> {
             String hour = Integer.toString(newVal);
             selectedHour = hour;
@@ -136,60 +131,59 @@ public class Add_Alarm_Activity extends AppCompatActivity {
             selectedMinute = minute;
         });
 
-        // Lắng nghe sự kiện khi người dùng thay đổi trạng thái của Switch
-        switchLaplai.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            isRepeatEnabled = isChecked;
-        });
-
-        // Lắng nghe sự kiện khi người dùng click vào các tùy chọn nhãn và âm báo
+        // Click listener for label selection
         btn_nhan.setOnClickListener(v -> {
-            // Lấy giá trị hiện tại của nhãn
+            // Get current label value
             String currentLabel = btn_nhan.getText().toString();
 
-            // Mở màn hình chọn nhãn và gửi giá trị nhãn hiện tại
+            // Open label editing screen and pass current label value
             Intent intent = new Intent(Add_Alarm_Activity.this, NhanBaoThuc_Activity.class);
             intent.putExtra("current_label", currentLabel);
             mEditLabelLauncher.launch(intent);
         });
 
+        // Click listener for repeat selection
         tv_Laplai.setOnClickListener(v -> {
-            // Mở màn hình chọn lặp lại và gửi trạng thái hiện tại
+            // Open repeat selection screen and pass current repeat state
             Intent intent = new Intent(Add_Alarm_Activity.this, AddAlarm_Laplai_Activity.class);
-            intent.putExtra("repeat", repeatState); // Gửi trạng thái lặp lại hiện tại
+            intent.putExtra("repeat", selectedDays); // Pass current repeat state
             mEditRepeatLauncher.launch(intent);
         });
 
+        // Click listener for sound selection
         btn_Ambao.setOnClickListener(v -> {
-            // Mở màn hình chọn âm báo
+            // Open sound selection screen
             Intent intent = new Intent(Add_Alarm_Activity.this, AmBao_BaoThuc_Activity.class);
             mEditSoundLauncher.launch(intent);
         });
 
-        // Lắng nghe sự kiện khi người dùng click vào nút "Lưu"
+        // Click listener for "Lưu" button
         tv_Luu.setOnClickListener(v -> {
-            if(selectedLabel == "") {
+            if (selectedLabel.equals("")) {
                 selectedLabel = "Báo thức";
             }
-            if(selectedDays == "") {
-                selectedDays = "Mỗi ngày";
-            }
-            if(selectedSound == null) {
+            updateRepeatTextView(selectedDays); // Update TextView for repeat display
+
+            if (selectedSound == null) {
                 selectedSound = getResources().openRawResource(R.raw.quandoi);
             }
+            // Generate a random ID
             int random = (int) Math.floor(Math.random() * 100 + 1);
             String id = Integer.toString(random);
-            dbHelper.saveAudio(id, selectedLabel, selectedHour, selectedMinute, selectedDays, "", isRepeatEnabled ? "true" : "false", "true", selectedSound);
-            finish();
+
+            // Save alarm details to database
+            dbHelper.saveAudio(id, selectedLabel, selectedHour, selectedMinute, selectedDays, "", switchLaplai.isChecked() ? "true" : "false", "true", selectedSound);
+            finish(); // Finish activity
         });
 
-        // Lắng nghe sự kiện khi người dùng click vào nút "Hủy"
+        // Click listener for "Hủy" button
         tv_Huy.setOnClickListener(v -> {
-            finish();
+            finish(); // Finish activity
         });
     }
 
-    // Ánh xạ các thành phần giao diện
-    private void anhXa() {
+    // Map UI elements
+    private void mapUI() {
         numberPickerHour = findViewById(R.id.numberPickerHour);
         numberPickerMinute = findViewById(R.id.numberPickerMinute);
         switchLaplai = findViewById(R.id.switch1);
@@ -200,22 +194,59 @@ public class Add_Alarm_Activity extends AppCompatActivity {
         tv_Huy = findViewById(R.id.tv_Huy);
     }
 
-    // Khởi tạo các NumberPicker và Switch
+    // Initialize NumberPickers and Switch
     private void initNumberPickersAndSwitch() {
-        // Khởi tạo NumberPicker cho giờ
+        // Initialize NumberPicker for hour
         numberPickerHour.setMinValue(0);
         numberPickerHour.setMaxValue(23);
-        numberPickerHour.setValue(0); // Giá trị mặc định là 0
-        selectedHour = "0"; // Khởi tạo giá trị đã chọn
+        numberPickerHour.setValue(0); // Default value is 0
+        selectedHour = "0"; // Initialize selected hour
 
-        // Khởi tạo NumberPicker cho phút
+        // Initialize NumberPicker for minute
         numberPickerMinute.setMinValue(0);
         numberPickerMinute.setMaxValue(59);
-        numberPickerMinute.setValue(0); // Giá trị mặc định là 0
-        selectedMinute = "0"; // Khởi tạo giá trị đã chọn
+        numberPickerMinute.setValue(0); // Default value is 0
+        selectedMinute = "0"; // Initialize selected minute
 
-        // Khởi tạo Switch cho tùy chọn lặp lại
-        switchLaplai.setChecked(false); // Mặc định là không được chọn
-        isRepeatEnabled = false; // Khởi tạo trạng thái lặp lại
+        // Initialize Switch for repeat option
+        switchLaplai.setChecked(false); // Default is unchecked
+    }
+
+    // Update TextView for repeat display
+    private void updateRepeatTextView(String repeat) {
+        switch (repeat) {
+            case "1111111":
+                tv_Laplai.setText("Mỗi ngày");
+                break;
+            case "0000000":
+                tv_Laplai.setText("Không");
+                break;
+            default:
+                // Handle other cases
+                StringBuilder repeatText = new StringBuilder();
+                if (repeat.charAt(0) == '1') {
+                    repeatText.append("T2 ");
+                }
+                if (repeat.charAt(1) == '1') {
+                    repeatText.append("T3 ");
+                }
+                if (repeat.charAt(2) == '1') {
+                    repeatText.append("T4 ");
+                }
+                if (repeat.charAt(3) == '1') {
+                    repeatText.append("T5 ");
+                }
+                if (repeat.charAt(4) == '1') {
+                    repeatText.append("T6 ");
+                }
+                if (repeat.charAt(5) == '1') {
+                    repeatText.append("T7 ");
+                }
+                if (repeat.charAt(6) == '1') {
+                    repeatText.append("CN");
+                }
+                tv_Laplai.setText(repeatText.toString().trim());
+                break;
+        }
     }
 }

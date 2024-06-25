@@ -220,12 +220,12 @@
                     android:id="@+id/switch1"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:layout_weight="2"
-                    android:track="@drawable/swich_track"
-                    android:thumb="@drawable/swich_thumb"
                     android:layout_marginRight="10dp"
+                    android:layout_weight="2"
+                    android:checked="true"
 
-                    />
+                    android:thumb="@drawable/swich_thumb"
+                    android:track="@drawable/swich_track" />
             </LinearLayout>
 
 

@@ -1,64 +1,61 @@
-// AlarmReceiver.java
 package com.example.myalarm;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
-import android.os.PowerManager;
-import android.util.Log;
+
+import java.util.Calendar;
 
 public class AlarmReceiver extends BroadcastReceiver {
-    private static final String TAG = "AlarmReceiver";
-    private PowerManager.WakeLock wakeLock;
-
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.i(TAG, "Alarm triggered!");
-
         if (intent != null) {
-            Log.i(TAG, "Action: " + intent.getAction());
-            Log.i(TAG, "Data: " + intent.getDataString());
-            Log.i(TAG, "Component: " + intent.getComponent());
-            Log.i(TAG, "Flags: " + intent.getFlags());
+            int hour = intent.getIntExtra("hour", 0);
+            int minute = intent.getIntExtra("minute", 0);
+            int alarmId = intent.getIntExtra("alarmId", 0);
+            boolean isSnooze = intent.getBooleanExtra("isSnooze", false);
+            String repeatDays = intent.getStringExtra("repeat");
 
-            Bundle extras = intent.getExtras();
-            if (extras != null) {
-                for (String key : extras.keySet()) {
-                    Object value = extras.get(key);
-                    Log.i(TAG, "Extras: Key = " + key + ", Value = " + value);
+            Intent alarmIntent = new Intent(context, AlarmActivity.class);
+            alarmIntent.putExtra("hour", hour);
+            alarmIntent.putExtra("minute", minute);
+            alarmIntent.putExtra("alarmId", alarmId);
+            alarmIntent.putExtra("isSnooze", isSnooze);
+            alarmIntent.putExtra("repeat", repeatDays);
+            alarmIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(alarmIntent);
+
+            if (!isSnooze && repeatDays != null) {
+                int nextDayOffset = getNextDayOffset(repeatDays);
+                if (nextDayOffset > 0) {
+                    AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+                    Calendar nextAlarmTime = Calendar.getInstance();
+                    nextAlarmTime.add(Calendar.DAY_OF_YEAR, nextDayOffset);
+                    nextAlarmTime.set(Calendar.HOUR_OF_DAY, hour);
+                    nextAlarmTime.set(Calendar.MINUTE, minute);
+                    nextAlarmTime.set(Calendar.SECOND, 0);
+
+                    PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                            context, alarmId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, nextAlarmTime.getTimeInMillis(), pendingIntent);
                 }
-
-                // Lấy giờ và phút từ extras
-                int hour = extras.getInt("hour", 0);
-                int minute = extras.getInt("minute", 0);
-                int alarmId = extras.getInt("alarmId", 0);
-                int isSnooze = extras.getInt("isSnooze", 0);
-
-                // Đánh thức thiết bị và giữ cho màn hình sáng
-                PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-                wakeLock = powerManager.newWakeLock(
-                        PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
-                                PowerManager.ACQUIRE_CAUSES_WAKEUP |
-                                PowerManager.ON_AFTER_RELEASE,
-                        "MyApp:AlarmWakeLock");
-                wakeLock.acquire(10*60*1000L /*10 minutes*/);
-
-                // Mở AlarmActivity
-                Intent alarmIntent = new Intent(context, AlarmActivity.class);
-                alarmIntent.putExtra("hour", hour);
-                alarmIntent.putExtra("minute", minute);
-                alarmIntent.putExtra("alarmId", alarmId);
-                alarmIntent.putExtra("isSnooze", isSnooze);
-                alarmIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                context.startActivity(alarmIntent);
-            } else {
-                Log.i(TAG, "No extras in the Intent");
             }
-        } else {
-            Log.i(TAG, "Received null Intent");
         }
     }
+
+    private int getNextDayOffset(String repeatDays) {
+        Calendar today = Calendar.getInstance();
+        int todayIndex = today.get(Calendar.DAY_OF_WEEK) - 1;
+
+        for (int i = 1; i <= 7; i++) {
+            int dayIndex = (todayIndex + i) % 7;
+            if (repeatDays.charAt(dayIndex) == '1') {
+                return i;
+            }
+        }
+        return 0;
+    }
 }
-
-

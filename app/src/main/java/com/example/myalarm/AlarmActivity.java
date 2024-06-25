@@ -9,7 +9,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
-import android.os.SystemClock;
+import android.os.Vibrator;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -26,6 +26,8 @@ public class AlarmActivity extends Activity {
     private PowerManager.WakeLock wakeLock;
     private KeyguardManager keyguardManager;
     private KeyguardManager.KeyguardLock keyguardLock;
+    private Vibrator vibrator;
+    private String repeatDays;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +42,7 @@ public class AlarmActivity extends Activity {
         minute = getIntent().getIntExtra("minute", 0);
         alarmId = getIntent().getIntExtra("alarmId", 0);
         isSnooze = getIntent().getIntExtra("isSnooze", 0) == 1;
+        repeatDays = getIntent().getStringExtra("repeat");
 
         // Hiển thị giờ và phút
         String alarmTime = String.format("%02d:%02d", hour, minute);
@@ -48,12 +51,21 @@ public class AlarmActivity extends Activity {
         // Phát âm thanh báo thức
         dbHelper.playAudio(String.valueOf(alarmId));
 
+        // Khởi động rung
+        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        if (vibrator != null && vibrator.hasVibrator()) {
+            vibrator.vibrate(1000); // Rung 1 giây
+        }
+
         // Thiết lập sự kiện cho nút Stop
         Button stopButton = findViewById(R.id.stop_button);
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 dbHelper.stopAudio();
+                if (vibrator != null) {
+                    vibrator.cancel();
+                }
                 handleButtonClick();
             }
         });
@@ -66,6 +78,9 @@ public class AlarmActivity extends Activity {
                 @Override
                 public void onClick(View v) {
                     dbHelper.stopAudio();
+                    if (vibrator != null) {
+                        vibrator.cancel();
+                    }
                     snoozeAlarm();
                     handleButtonClick();
                 }
@@ -96,12 +111,6 @@ public class AlarmActivity extends Activity {
         }
     }
 
-
-
-
-
-
-
     private void snoozeAlarm() {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(this, AlarmReceiver.class);
@@ -109,11 +118,12 @@ public class AlarmActivity extends Activity {
         intent.putExtra("minute", minute);
         intent.putExtra("alarmId", alarmId);
         intent.putExtra("isSnooze", 1);
+        intent.putExtra("repeat", repeatDays);
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, alarmId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.MINUTE, 10);
+        calendar.add(Calendar.SECOND, 5);
 
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
     }
