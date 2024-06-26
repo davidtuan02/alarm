@@ -10,9 +10,6 @@
         android:title="@string/action_baothuc"
         android:icon="@drawable/baothuc"/>
 
-    <item android:id="@+id/giodingu"
-        android:title="@string/action_giodingu"
-        android:icon="@drawable/giodingu"/>
 
     <item android:id="@+id/bamgio"
         android:title="@string/action_bamgio"

@@ -29,11 +29,10 @@ public class ViewPageAdapter extends FragmentStateAdapter {
             case 1 :
                 return new BaoThucFragment();
             case 2 :
-                return new GiodinguFragment();
-            case 3 :
                 return new BamgioFragment();
-            case 4 :
+            case 3 :
                 return new HengioFragment();
+
             default:
                 return new BaoThucFragment();
         }
