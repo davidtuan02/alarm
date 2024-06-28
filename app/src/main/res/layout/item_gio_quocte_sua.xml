@@ -14,8 +14,18 @@
         android:gravity="center_vertical"
         android:background="@color/black">
 
-        <LinearLayout
 
+        <ImageView
+            android:layout_marginLeft="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="15dp"
+            android:src="@drawable/baseline_remove_circle_24"
+            />
+
+
+
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -37,14 +47,31 @@
                 android:textColor="@color/white"/>
         </LinearLayout>
 
-        <TextView
+        <ImageView
+            android:maxHeight="35dp"
+            android:layout_gravity="center"
+            android:layout_marginLeft="10dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:text="00:06"
-            android:layout_marginRight="10dp"
-            android:textColor="@color/white"
-            android:textSize="80dp"/>
+            android:layout_marginRight="15dp"
+            android:src="@drawable/baseline_menu_24"
+            />
+        
+        
+        <LinearLayout
+            android:layout_width="80dp"
+            android:layout_height="100dp"
+            android:gravity="center"
+            android:background="@color/red12">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Xóa"
+                android:gravity="center"
+                android:textColor="@color/white"/>
+        </LinearLayout>
+
+
     </LinearLayout>
 
 
