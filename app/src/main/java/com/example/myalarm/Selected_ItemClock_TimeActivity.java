@@ -3,11 +3,7 @@ package com.example.myalarm;
 import android.os.Bundle;
 import android.widget.ListView;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.example.myalarm.Model.CityZone_Model;
 
@@ -85,10 +81,6 @@ public class Selected_ItemClock_TimeActivity extends AppCompatActivity {
         cityZoneList.add(new CityZone_Model(59, "Tonga", "Nuku'alofa", "Pacific/Tongatapu"));
         cityZoneList.add(new CityZone_Model(60, "Samoa", "Apia", "Pacific/Apia"));
         cityZoneList.add(new CityZone_Model(61, "Kiribati", "Kiritimati", "Pacific/Kiritimati"));
-
-
-
-
 
         // Create the adapter and set it to the ListView
         CityTimezoneAdapter adapter = new CityTimezoneAdapter(this, cityZoneList);
