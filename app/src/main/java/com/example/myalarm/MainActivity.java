@@ -21,6 +21,11 @@ public class MainActivity extends AppCompatActivity {
 
     private SQL dbHelper;
 
+    private SQL_Timezone dbTimezone;
+
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,6 +36,11 @@ public class MainActivity extends AppCompatActivity {
 
 
         dbHelper = new SQL(this);
+        dbTimezone = new SQL_Timezone(this);
+
+
+        dbTimezone.insertData("Hồ chí Minh" , "Việt Nam" , "Asia/Ho_Chi_Minh");
+
 
 
     }
