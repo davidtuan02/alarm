@@ -83,7 +83,7 @@
                 android:id="@+id/listViewCities"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:divider="@android:color/darker_gray"
+                android:divider="@color/grey111"
                 android:dividerHeight="1dp" />
 
             <TextView
@@ -96,7 +96,7 @@
 
                 android:text="A\nB\nC\nD\nE\nF\nG\nH\nI\nJ\nK\nL\nM\nN\nO\nP\nQ\nR\nS\nT\nU\nV\nW\nX\nY\nZ"
                 android:textColor="#FFA31C"
-                android:textSize="12sp" />
+                android:textSize="15sp" />
         </RelativeLayout>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
