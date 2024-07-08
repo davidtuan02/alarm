@@ -30,6 +30,18 @@
                 android:textSize="25dp" />
 
             <TextView
+                android:id="@+id/tv_back"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="start|center_vertical"
+                android:text="Trở lại"
+                android:textColor="#FFA31C"
+                android:visibility="gone"
+                android:textSize="25dp" />
+
+
+            <TextView
                 android:id="@+id/tv_AddTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

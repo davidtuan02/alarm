@@ -6,6 +6,19 @@ public class CityZone_Model {
     String quocGia;
     String zone;
 
+    public CityZone_Model() {
+    }
+
+    public String getTime() {
+        return time;
+    }
+
+    public void setTime(String time) {
+        this.time = time;
+    }
+
+    String time;
+
     public CityZone_Model(int id, String quocGia, String tenThanhPho, String zone) {
         this.id = id;
         this.quocGia = quocGia;
