@@ -1,28 +1,79 @@
-<!-- res/layout/activity_alarm.xml -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+
+    android:orientation="vertical"
+    android:background="@color/black100"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="16dp">
+    tools:context=".Alarm_TurnOnActivity">
 
-    <TextView
-        android:id="@+id/alarm_time_text_view"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_marginTop="250dp"
+        android:layout_gravity="center"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="48sp"
-        android:text="00:00"
-        android:layout_gravity="center"/>
+        android:orientation="vertical"
+        >
+        <TextView
+            android:id="@+id/alarmMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Báo thức"
+            android:textSize="30sp"
+            android:layout_gravity="center"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="20dp"/>
 
-    <Button
-        android:id="@+id/stop_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Stop"/>
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_marginTop="20dp"
+            android:id="@+id/Snooze"
+            android:layout_gravity="center"
+            android:layout_width="150dp"
+            android:gravity="center"
+            android:layout_height="50dp"
 
-    <Button
-        android:id="@+id/snooze_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Snooze"/>
+            android:background="@drawable/btn_snooze"
+
+            >
+
+            <TextView
+                android:id="@+id/tvSnooze"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:text="Snooze"
+                android:textColor="@color/white"
+                android:textSize="25dp" />
+        </LinearLayout>
+
+        <LinearLayout
+
+            android:orientation="vertical"
+            android:layout_marginTop="200dp"
+            android:id="@+id/Stop"
+            android:layout_width="100dp"
+            android:gravity="center"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:textColor="@color/white"
+            android:background="@drawable/btn_stop"
+
+            >
+
+            <TextView
+                android:id="@+id/tvStop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Stop"
+
+                android:textColor="@color/white"
+                android:textSize="25dp" />
+        </LinearLayout>
+    </LinearLayout>
 </LinearLayout>

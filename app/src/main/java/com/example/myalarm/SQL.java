@@ -1,31 +1,26 @@
 package com.example.myalarm;
 
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.util.Log;
 import android.widget.Toast;
-
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class SQL extends SQLiteOpenHelper {
 
-    private static final String DATABASE_NAME = "alarm.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final String DATABASE_NAME = "alarm_cl.db";
+    private static final int DATABASE_VERSION = 8;
     private static final String TABLE_NAME = "tblAlarmClock";
     private Context context;
     private MediaPlayer mediaPlayer;
@@ -120,48 +115,47 @@ public class SQL extends SQLiteOpenHelper {
     //------------------------------------------------------------------------
     public List<AlarmClockRecord> getRecords() {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_NAME, null, null, null, null, null, null);
-
+        Cursor cursor = null;
         List<AlarmClockRecord> records = new ArrayList<>();
-        if (cursor.moveToFirst()) {
-            do {
-                String id = cursor.getString(0);
-                String label = cursor.getString(1);
-                String hour = cursor.getString(2);
-                String minute = cursor.getString(3);
-                String days = cursor.getString(4);
-                String weekly = cursor.getString(5);
-                byte[] tone = cursor.getBlob(6);
-                String isSnooze = cursor.getString(7);
-                String isEnable = cursor.getString(8);
 
-                AlarmClockRecord record = new AlarmClockRecord(id, label, hour, minute, days, weekly, tone, isSnooze, isEnable);
-                records.add(record);
-            } while (cursor.moveToNext());
-        }
+        try {
+            cursor = db.query(TABLE_NAME, null, null, null, null, null, null);
 
-        cursor.close();
-        db.close();
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    try {
+                        String id = cursor.getString(cursor.getColumnIndexOrThrow("id"));
+                        String label = cursor.getString(cursor.getColumnIndexOrThrow("label"));
+                        String hour = cursor.getString(cursor.getColumnIndexOrThrow("hour"));
+                        String minute = cursor.getString(cursor.getColumnIndexOrThrow("minute"));
+                        String days = cursor.getString(cursor.getColumnIndexOrThrow("days"));
+                        String weekly = cursor.getString(cursor.getColumnIndexOrThrow("weekly"));
+                        byte[] tone = cursor.getBlob(cursor.getColumnIndexOrThrow("tone"));
+                        String isSnooze = cursor.getString(cursor.getColumnIndexOrThrow("isSnooze"));
+                        String isEnable = cursor.getString(cursor.getColumnIndexOrThrow("isEnable"));
 
-        if (records.isEmpty()) {
-            Toast.makeText(context, "No records found.", Toast.LENGTH_LONG).show();
-        } else {
-            StringBuilder data = new StringBuilder();
-            for (AlarmClockRecord record : records) {
-                data.append("id: ").append(record.id)
-                        .append(" label: ").append(record.label)
-                        .append(" time: ").append(record.hour).append("h").append(record.minute)
-                        .append(" days: ").append(record.days)
-                        .append(" weekly: ").append(record.weekly)
-                        .append(" isSnooze: ").append(record.isSnooze)
-                        .append(" isEnable: ").append(record.isEnable)
-                        .append("\n");
+                        AlarmClockRecord record = new AlarmClockRecord(id, label, hour, minute, days, weekly, tone, isSnooze, isEnable);
+                        records.add(record);
+                    } catch (IllegalArgumentException e) {
+                        Log.e("SQL", "Error retrieving column.", e);
+                    }
+                } while (cursor.moveToNext());
+            } else {
+                Log.e("SQL", "No records found.");
             }
-//            Toast.makeText(context, data.toString(), Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            Log.e("SQL", "Error querying database.", e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
         }
 
         return records;
     }
+
+
 
     public AlarmClockRecord getAlarmById(String id) {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -170,7 +164,7 @@ public class SQL extends SQLiteOpenHelper {
         Cursor cursor = db.query(TABLE_NAME, null, "id = ?", new String[]{id}, null, null, null);
 
         try {
-            if (cursor.moveToFirst()) {
+            if (cursor != null && cursor.moveToFirst()) {
                 alarm = new AlarmClockRecord();
                 alarm.id = cursor.getString(cursor.getColumnIndexOrThrow("id"));
                 alarm.label = cursor.getString(cursor.getColumnIndexOrThrow("label"));
@@ -181,31 +175,21 @@ public class SQL extends SQLiteOpenHelper {
                 alarm.tone = cursor.getBlob(cursor.getColumnIndexOrThrow("tone"));
                 alarm.isSnooze = cursor.getString(cursor.getColumnIndexOrThrow("isSnooze"));
                 alarm.isEnable = cursor.getString(cursor.getColumnIndexOrThrow("isEnable"));
-
-                // Hiển thị thông tin của alarm bằng Toast
-                StringBuilder sb = new StringBuilder();
-                sb.append("id: ").append(alarm.id)
-                        .append("\nlabel: ").append(alarm.label)
-                        .append("\ntime: ").append(alarm.hour).append("h").append(alarm.minute)
-                        .append("\ndays: ").append(alarm.days)
-                        .append("\nweekly: ").append(alarm.weekly)
-                        .append("\nisSnooze: ").append(alarm.isSnooze)
-                        .append("\nisEnable: ").append(alarm.isEnable);
-
-//                Toast.makeText(context, sb.toString(), Toast.LENGTH_LONG).show();
             } else {
                 Log.e("SQL", "No record found with ID: " + id);
-                Toast.makeText(context, "No record found with ID: " + id, Toast.LENGTH_SHORT).show();
             }
         } catch (IllegalArgumentException e) {
             Log.e("SQL", "Error retrieving column.", e);
         } finally {
-            cursor.close();
+            if (cursor != null) {
+                cursor.close();
+            }
             db.close();
         }
 
         return alarm;
     }
+
 
 
 

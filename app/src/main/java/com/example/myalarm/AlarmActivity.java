@@ -12,9 +12,12 @@ import android.os.PowerManager;
 import android.os.Vibrator;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
+
+
+import java.util.Arrays;
 import java.util.Calendar;
 
 public class AlarmActivity extends Activity {
@@ -28,6 +31,8 @@ public class AlarmActivity extends Activity {
     private KeyguardManager.KeyguardLock keyguardLock;
     private Vibrator vibrator;
     private String repeatDays;
+    private AlarmClockRecord alarm;
+    private LinearLayout snooze, stop;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,18 +40,17 @@ public class AlarmActivity extends Activity {
         setContentView(R.layout.activity_alarm);
 
         dbHelper = new SQL(this);
-        TextView alarmTimeTextView = findViewById(R.id.alarm_time_text_view);
+        TextView tvSnooze = findViewById(R.id.tvSnooze);
+        TextView tvStop = findViewById(R.id.tvStop);
+        snooze = findViewById(R.id.Snooze);
+        stop = findViewById(R.id.Stop);
 
         // Nhận giờ và phút từ Intent
         hour = getIntent().getIntExtra("hour", 0);
         minute = getIntent().getIntExtra("minute", 0);
         alarmId = getIntent().getIntExtra("alarmId", 0);
-        isSnooze = getIntent().getIntExtra("isSnooze", 0) == 1;
+        isSnooze = getIntent().getBooleanExtra("isSnooze", false);
         repeatDays = getIntent().getStringExtra("repeat");
-
-        // Hiển thị giờ và phút
-        String alarmTime = String.format("%02d:%02d", hour, minute);
-        alarmTimeTextView.setText(alarmTime);
 
         // Phát âm thanh báo thức
         dbHelper.playAudio(String.valueOf(alarmId));
@@ -57,24 +61,9 @@ public class AlarmActivity extends Activity {
             vibrator.vibrate(1000); // Rung 1 giây
         }
 
-        // Thiết lập sự kiện cho nút Stop
-        Button stopButton = findViewById(R.id.stop_button);
-        stopButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dbHelper.stopAudio();
-                if (vibrator != null) {
-                    vibrator.cancel();
-                }
-                handleButtonClick();
-            }
-        });
-
-        // Thiết lập sự kiện cho nút Snooze
-        Button snoozeButton = findViewById(R.id.snooze_button);
         if (isSnooze) {
-            snoozeButton.setVisibility(View.VISIBLE);
-            snoozeButton.setOnClickListener(new View.OnClickListener() {
+            snooze.setVisibility(View.VISIBLE);
+            tvSnooze.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     dbHelper.stopAudio();
@@ -86,8 +75,22 @@ public class AlarmActivity extends Activity {
                 }
             });
         } else {
-            snoozeButton.setVisibility(View.GONE);
+            snooze.setVisibility(View.GONE);
         }
+
+        stop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dbHelper.stopAudio();
+                if (vibrator != null) {
+                    vibrator.cancel();
+                }
+                handleButtonClick();
+                //set ngay tiep theo
+            }
+        });
+
+
     }
 
     private void handleButtonClick() {
@@ -117,7 +120,7 @@ public class AlarmActivity extends Activity {
         intent.putExtra("hour", hour);
         intent.putExtra("minute", minute);
         intent.putExtra("alarmId", alarmId);
-        intent.putExtra("isSnooze", 1);
+        intent.putExtra("isSnooze", true);
         intent.putExtra("repeat", repeatDays);
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, alarmId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -126,6 +129,103 @@ public class AlarmActivity extends Activity {
         calendar.add(Calendar.SECOND, 5);
 
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+    }
+
+    private void setRepeatingAlarm() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, AlarmReceiver.class);
+        intent.putExtra("hour", hour);
+        intent.putExtra("minute", minute);
+        intent.putExtra("alarmId", alarmId);
+        intent.putExtra("isSnooze", false);
+        intent.putExtra("repeat", repeatDays);
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, alarmId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, hour);
+        calendar.set(Calendar.MINUTE, minute);
+        calendar.set(Calendar.SECOND, 0);
+
+        // Tìm ngày kế tiếp để lặp lại
+        boolean[] isEnableArray = new boolean[7]; // 0: Chủ Nhật, 1: Thứ Hai, ..., 6: Thứ Bảy
+        Arrays.fill(isEnableArray, false);
+
+        if ("Mỗi ngày".equals(repeatDays)) {
+            Arrays.fill(isEnableArray, true);
+        } else if (!"Không".equals(repeatDays)) {
+            String[] repeatDaysArray = repeatDays.split(" ");
+            for (String day : repeatDaysArray) {
+                int dayOfWeek = convertDayStringToInt(day) - 1;
+                isEnableArray[dayOfWeek] = true;
+            }
+
+            Calendar todayCalendar = Calendar.getInstance();
+            int today = todayCalendar.get(Calendar.DAY_OF_WEEK) - 1;
+
+            boolean foundNextRepeat = false;
+            for (int i = 1; i <= 7; i++) {
+                int nextDay = (today + i) % 7;
+                if (isEnableArray[nextDay]) {
+                    calendar.add(Calendar.DAY_OF_YEAR, i);
+                    foundNextRepeat = true;
+                    break;
+                }
+            }
+
+            if (!foundNextRepeat) {
+                Arrays.fill(isEnableArray, false);
+            }
+        }
+
+        if (alarmManager != null) {
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+        }
+
+        StringBuilder isEnableBuilder = new StringBuilder();
+        for (boolean isEnabled : isEnableArray) {
+            isEnableBuilder.append(isEnabled ? "1" : "0").append(" ");
+        }
+        String isEnable = isEnableBuilder.toString().trim();
+
+        if (alarmId != -1) {
+            alarm = dbHelper.getAlarmById(String.valueOf(alarmId));
+            if (alarm != null) {
+                AlarmClockRecord updatedAlarm = new AlarmClockRecord(
+                        String.valueOf(alarmId),
+                        alarm.label,
+                        alarm.hour,
+                        alarm.minute,
+                        alarm.days,
+                        alarm.weekly,
+                        alarm.tone,
+                        alarm.isSnooze,
+                        isEnable
+                );
+                dbHelper.updateRecord(updatedAlarm);
+            }
+        }
+    }
+
+    private int convertDayStringToInt(String day) {
+        switch (day) {
+            case "T2":
+                return Calendar.MONDAY;
+            case "T3":
+                return Calendar.TUESDAY;
+            case "T4":
+                return Calendar.WEDNESDAY;
+            case "T5":
+                return Calendar.THURSDAY;
+            case "T6":
+                return Calendar.FRIDAY;
+            case "T7":
+                return Calendar.SATURDAY;
+            case "CN":
+                return Calendar.SUNDAY;
+            default:
+                throw new IllegalArgumentException("Invalid day: " + day);
+        }
     }
 
     @Override

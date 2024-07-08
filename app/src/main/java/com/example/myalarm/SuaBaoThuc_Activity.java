@@ -1,18 +1,22 @@
 package com.example.myalarm;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.NumberPicker;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 public class SuaBaoThuc_Activity extends AppCompatActivity {
@@ -23,6 +27,10 @@ public class SuaBaoThuc_Activity extends AppCompatActivity {
     private String isEnable;
     private int alarmId;
     private SQL dbHelper;
+
+    private String newFilePath;
+    private String newSound;
+    private byte[] selectedSound = null;
 
     private static final int REQUEST_EDIT_LABEL = 1;
     private static final int REQUEST_EDIT_REPEAT = 2;
@@ -48,6 +56,7 @@ public class SuaBaoThuc_Activity extends AppCompatActivity {
         numberPickerMinute.setMinValue(0);
         numberPickerMinute.setMaxValue(59);
 
+
         if (alarmId != -1) {
             AlarmClockRecord alarm = dbHelper.getAlarmById(String.valueOf(alarmId));
             if (alarm != null) {
@@ -61,59 +70,129 @@ public class SuaBaoThuc_Activity extends AppCompatActivity {
             finish();
         }
 
-        tvLabel.setOnClickListener(v -> {
-            Intent intent = new Intent(SuaBaoThuc_Activity.this, NhanBaoThuc_Activity.class);
-            intent.putExtra("current_label", tvLabel.getText().toString());
-            startActivityForResult(intent, REQUEST_EDIT_LABEL);
+        tvLabel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(SuaBaoThuc_Activity.this, NhanBaoThuc_Activity.class);
+                intent.putExtra("current_label", tvLabel.getText().toString());
+                startActivityForResult(intent, REQUEST_EDIT_LABEL);
+            }
         });
 
-        tvLapLai.setOnClickListener(v -> {
-            Intent intent = new Intent(SuaBaoThuc_Activity.this, AddAlarm_Laplai_Activity.class);
-            intent.putExtra("repeat", dbHelper.getAlarmById(String.valueOf(alarmId)).days);
-            startActivityForResult(intent, REQUEST_EDIT_REPEAT);
+        tvLapLai.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(SuaBaoThuc_Activity.this, AddAlarm_Laplai_Activity.class);
+                intent.putExtra("repeat", tvLapLai.getText().toString());
+                startActivityForResult(intent, REQUEST_EDIT_REPEAT);
+            }
         });
 
-        tvAmBao.setOnClickListener(v -> {
-            Intent intent = new Intent(SuaBaoThuc_Activity.this, AmBao_BaoThuc_Activity.class);
-            intent.putExtra("selectedRingtone", tvAmBao.getText().toString());
-            startActivityForResult(intent, REQUEST_EDIT_SOUND);
+        tvAmBao.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(SuaBaoThuc_Activity.this, AmBao_BaoThuc_Activity.class);
+                intent.putExtra("selectedRingtone", tvAmBao.getText().toString());
+                startActivityForResult(intent, REQUEST_EDIT_SOUND);
+            }
         });
 
-        switchRepeat.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            // Cập nhật trạng thái lặp lại khi switch thay đổi
+        switchRepeat.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            }
         });
 
         TextView tvHuy = findViewById(R.id.tv_Huy);
-        tvHuy.setOnClickListener(v -> finish());
+        tvHuy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
 
         TextView tvLuu = findViewById(R.id.tv_Luu);
-        tvLuu.setOnClickListener(v -> saveAlarm());
+        tvLuu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                saveAlarm();
+            }
+        });
 
         Button btnDelete = findViewById(R.id.btn_Del);
-        btnDelete.setOnClickListener(v -> deleteAlarm());
+        btnDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                deleteAlarm();
+            }
+        });
     }
 
     private void updateUI(AlarmClockRecord alarm) {
         isEnable = alarm.isEnable;
+        selectedSound = alarm.tone;
         numberPickerHour.setValue(Integer.parseInt(alarm.hour));
         numberPickerMinute.setValue(Integer.parseInt(alarm.minute));
         tvLabel.setText(alarm.label);
-        switchRepeat.setChecked(alarm.isSnooze.equals("true"));
-        updateRepeatTextView(alarm.days);
+        tvLapLai.setText(alarm.days);
+        if(alarm.isSnooze.equals("true")) {
+            switchRepeat.setChecked(true);
+        }
+        else if(alarm.isSnooze.equals("false")) {
+            switchRepeat.setChecked(false);
+        }
 
-        // Xác định âm báo dựa trên byte array của âm thanh từ cơ sở dữ liệu
-        byte[] senaTone = convertInputStreamToByteArray(getResources().openRawResource(R.raw.sena));
-        byte[] quandoiTone = convertInputStreamToByteArray(getResources().openRawResource(R.raw.quandoi));
+        byte[] quandoiTone = null;
+        byte[] gagayTone = null;
+        byte[] killthisloveTone = null;
 
-        boolean isSenaTone = Arrays.equals(alarm.tone, senaTone);
+        // Đọc file MP3 từ res/raw
+        InputStream inputStreamGaGay = getResources().openRawResource(R.raw.gagay);
+        gagayTone = convertInputStreamToByteArray(inputStreamGaGay);
+
+        InputStream inputStreamQuandoi = getResources().openRawResource(R.raw.quandoi);
+        quandoiTone = convertInputStreamToByteArray(inputStreamQuandoi);
+
+        InputStream inputStreamKTL = getResources().openRawResource(R.raw.killthislove);
+        killthisloveTone = convertInputStreamToByteArray(inputStreamKTL);
+
+        // Đóng InputStream sau khi sử dụng
+        try {
+            inputStreamGaGay.close();
+            inputStreamQuandoi.close();
+            inputStreamKTL.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Kiểm tra xem alarm.tone có bằng senaTone hay quandoiTone không
         boolean isQuandoiTone = Arrays.equals(alarm.tone, quandoiTone);
+        boolean isGaGayTone = Arrays.equals(alarm.tone, gagayTone);
+        boolean isKillthisloveTone = Arrays.equals(alarm.tone, killthisloveTone);
 
-        if (isSenaTone) {
-            tvAmBao.setText("Thức dậy cho tao");
-        } else if (isQuandoiTone) {
+        if (isQuandoiTone) {
             tvAmBao.setText("Quân đội");
-        } else {
-            tvAmBao.setText("Nhạc hay");
+        }
+        else if (isGaGayTone) {
+            tvAmBao.setText("Tiếng gà gáy");
+        }
+        else if (isKillthisloveTone) {
+            tvAmBao.setText("Kill this love");
+        }
+        else {
+            tvAmBao.setText("LỖI NÀY!");
+        }
+
+    }
+
+
+    // Hàm chuyển đổi byte[] thành chuỗi
+    private String convertByteArrayToString(byte[] byteArray) {
+        try {
+            return new String(byteArray, "UTF-8"); // Sử dụng mã hóa phù hợp
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
@@ -143,17 +222,16 @@ public class SuaBaoThuc_Activity extends AppCompatActivity {
         String minute = String.valueOf(numberPickerMinute.getValue());
         String label = tvLabel.getText().toString();
         String days = tvLapLai.getText().toString();
-        String sound = tvAmBao.getText().toString();
-        String repeat = switchRepeat.isChecked() ? "true" : "false";
-
-        byte[] soundBytes = null;
-        if (sound.equals("Quân đội") || sound.equals("Nhạc hay")) {
-            soundBytes = convertInputStreamToByteArray(getResources().openRawResource(R.raw.quandoi));
-        } else if (sound.equals("Thức dậy cho tao")) {
-            soundBytes = convertInputStreamToByteArray(getResources().openRawResource(R.raw.sena));
+//        String sound = tvAmBao.getText().toString();
+        String repeat;
+        if(switchRepeat.isChecked()) {
+            repeat = "true";
+        }
+        else {
+            repeat = "false";
         }
 
-        AlarmClockRecord updatedAlarm = new AlarmClockRecord(String.valueOf(alarmId), label, hour, minute, days, "", soundBytes, repeat, isEnable);
+        AlarmClockRecord updatedAlarm = new AlarmClockRecord(String.valueOf(alarmId), label, hour, minute, days, "", selectedSound, repeat, isEnable);
         int result = dbHelper.updateRecord(updatedAlarm);
 
         if (result > 0) {
@@ -180,7 +258,7 @@ public class SuaBaoThuc_Activity extends AppCompatActivity {
                 case REQUEST_EDIT_LABEL:
                     String newLabel = data.getStringExtra("label");
                     if (newLabel != null) {
-                        if (newLabel.equals("")) {
+                        if(newLabel.equals("")) {
                             newLabel = "Báo thức";
                         }
                         tvLabel.setText(newLabel);
@@ -189,55 +267,61 @@ public class SuaBaoThuc_Activity extends AppCompatActivity {
                 case REQUEST_EDIT_REPEAT:
                     String newDays = data.getStringExtra("repeat");
                     if (newDays != null) {
-                        updateRepeatTextView(newDays);
+                        tvLapLai.setText(newDays);
                     }
                     break;
                 case REQUEST_EDIT_SOUND:
                     String newSound = data.getStringExtra("selectedRingtone");
-                    if (newSound != null) {
+                    String newFilePath = data.getStringExtra("selectedFilePath");
+
+                    if (newFilePath != null && !newFilePath.isEmpty()) {
+                        // Xử lý newFilePath tại đây
+                        tvAmBao.setText("Custom Sound");
+
+                        try {
+                            // Tạo đối tượng FileInputStream từ đường dẫn filePath
+                            FileInputStream inputStream = new FileInputStream(newFilePath);
+
+                            // Chuyển đổi inputStream thành mảng byte
+                            byte[] soundBytes = convertInputStreamToByteArray(inputStream);
+
+                            // Lưu soundBytes vào selectedSound
+                            selectedSound = soundBytes;
+
+                            // Đóng inputStream nếu không sử dụng nữa để giải phóng tài nguyên
+                            inputStream.close();
+
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                    } else if (newSound != null && !newSound.isEmpty()) {
+                        // Xử lý newSound tại đây
                         tvAmBao.setText(newSound);
+
+                        if (newSound.equals("Quân đội")) {
+                            InputStream inputStream = getResources().openRawResource(R.raw.quandoi);
+                            byte[] soundBytes = convertInputStreamToByteArray(inputStream);
+                            selectedSound = soundBytes;
+                        }
+//
+                        else if (newSound.equals("Tiếng gà gáy")) {
+                            InputStream inputStream = getResources().openRawResource(R.raw.gagay);
+                            byte[] soundBytes = convertInputStreamToByteArray(inputStream);
+                            selectedSound = soundBytes;
+                        }
+                        else if (newSound.equals("Kill this love")) {
+                            InputStream inputStream = getResources().openRawResource(R.raw.killthislove);
+                            byte[] soundBytes = convertInputStreamToByteArray(inputStream);
+                            selectedSound = soundBytes;
+                        }
                     }
                     break;
                 default:
                     break;
             }
-        }
-    }
-
-    private void updateRepeatTextView(String repeat) {
-        switch (repeat) {
-            case "1111111":
-                tvLapLai.setText("Mỗi ngày");
-                break;
-            case "0000000":
-                tvLapLai.setText("Không");
-                break;
-            default:
-                // Xử lý các trường hợp còn lại
-                StringBuilder repeatText = new StringBuilder();
-                if (repeat.charAt(0) == '1') {
-                    repeatText.append("T2 ");
-                }
-                if (repeat.charAt(1) == '1') {
-                    repeatText.append("T3 ");
-                }
-                if (repeat.charAt(2) == '1') {
-                    repeatText.append("T4 ");
-                }
-                if (repeat.charAt(3) == '1') {
-                    repeatText.append("T5 ");
-                }
-                if (repeat.charAt(4) == '1') {
-                    repeatText.append("T6 ");
-                }
-                if (repeat.charAt(5) == '1') {
-                    repeatText.append("T7 ");
-                }
-                if (repeat.charAt(6) == '1') {
-                    repeatText.append("CN");
-                }
-                tvLapLai.setText(repeatText.toString().trim());
-                break;
         }
     }
 }

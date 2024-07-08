@@ -8,10 +8,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -23,6 +23,8 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
     private List<AlarmClockRecord> alarmList;
     private Context context;
     private OnItemClickListener onItemClickListener;
+    private boolean isEditMode = false;
+
 
     public AlarmAdapter(Context context, List<AlarmClockRecord> alarmList) {
         this.context = context;
@@ -85,8 +87,27 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
                 }
             }
         });
+
+//        if (isEditMode) {
+//            holder.alarmSwitch.setVisibility(View.GONE);
+//            holder.btnDel.setVisibility(View.VISIBLE);
+//        } else {
+//            holder.alarmSwitch.setVisibility(View.VISIBLE);
+//            holder.btnDel.setVisibility(View.GONE);
+//        }
+//
+//        holder.btnDel.setOnClickListener(v -> {
+//            // Handle delete action
+////            cityTimeList.remove(position);
+////            notifyItemRemoved(position);
+////            notifyItemRangeChanged(position, cityTimeList.size());
+//        });
     }
 
+    public void setEditMode(boolean isEditMode) {
+        this.isEditMode = isEditMode;
+        notifyDataSetChanged();
+    }
     private void setAlarm(AlarmClockRecord alarm) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(context, AlarmReceiver.class);
@@ -151,12 +172,15 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
         TextView labelTextView;
         Switch alarmSwitch;
 
+        Button btnDel;
+
         public AlarmViewHolder(@NonNull View itemView) {
             super(itemView);
             hourTextView = itemView.findViewById(R.id.hourTextView);
             minuteTextView = itemView.findViewById(R.id.minuteTextView);
             labelTextView = itemView.findViewById(R.id.labelTextVie); // Kiểm tra lại ID ở đây
             alarmSwitch = itemView.findViewById(R.id.switch1);
+            btnDel = itemView.findViewById(R.id.btnDelete);
 
             // Kiểm tra xem các TextView có null không
             if (hourTextView == null || minuteTextView == null || labelTextView == null) {

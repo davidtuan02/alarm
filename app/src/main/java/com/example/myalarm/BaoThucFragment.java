@@ -10,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -24,10 +23,13 @@ import java.util.List;
 public class BaoThucFragment extends Fragment {
     private static final String TAG = "BaoThucFragment";
 
-    private TextView tvAddAlarm;
+    private TextView tvAddAlarm, tvEdit, tvBack;
     private SQL dbHelper;
     private AlarmAdapter alarmAdapter;
     private AlarmManager alarmManager;
+    private boolean isEditMode = false;
+
+    private AlarmAdapter adapter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -62,6 +64,8 @@ public class BaoThucFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         tvAddAlarm = view.findViewById(R.id.tv_AddAlarm);
+        tvEdit = view.findViewById(R.id.tv_SuaBaoThuc);
+        tvBack = view.findViewById(R.id.tv_back);
 
         tvAddAlarm.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -70,6 +74,26 @@ public class BaoThucFragment extends Fragment {
                 startActivity(intent);
             }
         });
+
+//        tvEdit.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                tvBack.setVisibility(View.VISIBLE);
+//                tvEdit.setVisibility(View.GONE);
+////                isEditMode = !isEditMode;
+////                adapter.setEditMode(isEditMode);
+//            }
+//        });
+//
+//        tvBack.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                tvBack.setVisibility(View.GONE);
+//                tvEdit.setVisibility(View.VISIBLE);
+////                isEditMode = !isEditMode;
+////                adapter.setEditMode(isEditMode);
+//            }
+//        });
 
         List<AlarmClockRecord> records = dbHelper.getRecords();
         for (AlarmClockRecord record : records) {
@@ -137,6 +161,7 @@ public class BaoThucFragment extends Fragment {
         intent.putExtra("minute", minute);
         intent.putExtra("alarmId", alarmId);
         intent.putExtra("isSnooze", alarm.isSnooze.equals("true") ? 1 : 0);
+//        Toast.makeText(getContext(), "" + alarm.isSnooze, Toast.LENGTH_SHORT).show();
 
         // Sử dụng FLAG_UPDATE_CURRENT để cập nhật PendingIntent hiện có hoặc tạo mới nếu chưa tồn tại
         PendingIntent pendingIntent = PendingIntent.getBroadcast(requireContext(), alarmId, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
