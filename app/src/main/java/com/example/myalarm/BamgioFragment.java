@@ -8,12 +8,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
+import com.example.myalarm.R;
 
 import java.util.ArrayList;
 
@@ -30,6 +33,8 @@ public class BamgioFragment extends Fragment {
     private long startTime, elapsedTime = 0L;
     private boolean isRunning = false;
 
+    private LinearLayout linerStart, linerStop;
+
     private Runnable timerRunnable = new Runnable() {
         @Override
         public void run() {
@@ -45,6 +50,7 @@ public class BamgioFragment extends Fragment {
         }
     };
 
+    @SuppressLint("MissingInflatedId")
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_bamgio, container, false);
@@ -53,6 +59,8 @@ public class BamgioFragment extends Fragment {
         btnStart = view.findViewById(R.id.btnStart);
         btnMainAction = view.findViewById(R.id.btnMainAction);
         lapListView = view.findViewById(R.id.lapListView);
+        linerStart = view.findViewById(R.id.LinerStart); // Sửa lỗi tên ID cho đúng
+        linerStop = view.findViewById(R.id.LinerLab); // Sửa lỗi tên ID cho đúng
 
         laps = new ArrayList<>();
         adapter = new ArrayAdapter<>(getContext(), R.layout.list_item, laps);
@@ -84,6 +92,7 @@ public class BamgioFragment extends Fragment {
     }
 
     private void startTimer() {
+        linerStart.setBackgroundResource(R.drawable.button_vien_stop_background);
         startTime = System.currentTimeMillis() - elapsedTime;
         handler.postDelayed(timerRunnable, 0);
         isRunning = true;
@@ -96,6 +105,7 @@ public class BamgioFragment extends Fragment {
     }
 
     private void stopTimer() {
+        linerStart.setBackgroundResource(R.drawable.button_vien_start_main_action_background);
         handler.removeCallbacks(timerRunnable);
         isRunning = false;
         btnStart.setText("Start");

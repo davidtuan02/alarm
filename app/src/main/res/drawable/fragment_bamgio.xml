@@ -7,7 +7,7 @@
     android:background="@color/black"
 
     >
-    <!--    tools:context=".BamgioFragmen"-->
+<!--    tools:context=".BamgioFragmen"-->
     <TextView
         android:id="@+id/tvTimer"
         android:layout_width="match_parent"
