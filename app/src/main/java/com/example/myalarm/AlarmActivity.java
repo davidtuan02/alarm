@@ -87,6 +87,7 @@ public class AlarmActivity extends Activity {
                 }
                 handleButtonClick();
                 //set ngay tiep theo
+                setRepeatingAlarm();
             }
         });
 
