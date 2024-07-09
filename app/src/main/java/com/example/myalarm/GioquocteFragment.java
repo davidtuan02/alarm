@@ -26,14 +26,14 @@ public class GioquocteFragment extends Fragment {
 
     private TextView tvAddTime, tvSua, tvBack;
     private List<CityZone_Model> cityZoneList = new ArrayList<>();
-    private InternationalTimeAdapter adapter;
+    private RecyclerView recyclerView;
     private boolean isEditMode = false;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_gioquocte, container , false);
-        return  view ;
+        return view;
     }
 
     @Override
@@ -42,12 +42,10 @@ public class GioquocteFragment extends Fragment {
         tvAddTime = view.findViewById(R.id.tv_AddTime);
         tvSua = view.findViewById(R.id.tv_SuaBaoThuc);
         tvBack = view.findViewById(R.id.tv_back);
+        recyclerView = view.findViewById(R.id.recyclerView);
 
-        RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-
-        adapter = new InternationalTimeAdapter(requireContext(), cityZoneList);
-        recyclerView.setAdapter(adapter);
+        setAdapter();
 
         tvAddTime.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -60,22 +58,32 @@ public class GioquocteFragment extends Fragment {
         tvSua.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                isEditMode = !isEditMode;
+                setAdapter();
                 tvBack.setVisibility(View.VISIBLE);
                 tvSua.setVisibility(View.GONE);
-                isEditMode = !isEditMode;
-                adapter.setEditMode(isEditMode);
             }
         });
 
         tvBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                isEditMode = !isEditMode;
+                setAdapter();
                 tvBack.setVisibility(View.GONE);
                 tvSua.setVisibility(View.VISIBLE);
-                isEditMode = !isEditMode;
-                adapter.setEditMode(isEditMode);
             }
         });
+    }
+
+    private void setAdapter() {
+        RecyclerView.Adapter adapter;
+        if (isEditMode) {
+            adapter = new InternationalTimeCancelAdapter(requireContext(), cityZoneList);
+        } else {
+            adapter = new InternationalTimeAdapter(requireContext(), cityZoneList);
+        }
+        recyclerView.setAdapter(adapter);
     }
 
     @Override
@@ -84,8 +92,6 @@ public class GioquocteFragment extends Fragment {
         if (requestCode == 1 && resultCode == getActivity().RESULT_OK && data != null) {
             String currentTime = data.getStringExtra("currentTime");
             if (currentTime != null) {
-//                Toast.makeText(requireContext(), "Current time: " + currentTime, Toast.LENGTH_LONG).show();
-
                 try {
                     JSONObject jsonObject = new JSONObject(currentTime);
                     String time = jsonObject.getString("time");
@@ -96,7 +102,8 @@ public class GioquocteFragment extends Fragment {
                     cityZone.setTime(time);
 
                     cityZoneList.add(cityZone);
-                    adapter.notifyDataSetChanged();
+                    // Cập nhật lại adapter sau khi thêm thành phố mới
+                    setAdapter();
                 } catch (JSONException e) {
                     e.printStackTrace();
                     Toast.makeText(requireContext(), "Error parsing JSON", Toast.LENGTH_LONG).show();

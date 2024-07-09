@@ -4,6 +4,8 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -14,11 +16,12 @@ import com.example.myalarm.Model.CityZone_Model;
 
 import java.util.List;
 
-public class InternationalTimeAdapter extends RecyclerView.Adapter<InternationalTimeAdapter.ViewHolder> {
+public class InternationalTimeCancelAdapter extends RecyclerView.Adapter<InternationalTimeCancelAdapter.ViewHolder> {
     private Context context;
     private List<CityZone_Model> cityTimeList;
+    private boolean isEditMode = false;
 
-    public InternationalTimeAdapter(Context context, List<CityZone_Model> cityTimeList) {
+    public InternationalTimeCancelAdapter(Context context, List<CityZone_Model> cityTimeList) {
         this.context = context;
         this.cityTimeList = cityTimeList;
     }
@@ -26,7 +29,7 @@ public class InternationalTimeAdapter extends RecyclerView.Adapter<International
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_gio_quoc_te, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.item_gio_quocte_sua, parent, false);
         return new ViewHolder(view);
     }
 
@@ -34,9 +37,10 @@ public class InternationalTimeAdapter extends RecyclerView.Adapter<International
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         CityZone_Model cityTime = cityTimeList.get(position);
         String[] arr = cityTime.getZone().split("/");
-        holder.tvCity.setText(arr[1]);
-        holder.tvTime.setText(cityTime.getTime());
-        holder.tvDate.setText("Today");  // Assuming you want to set date or some other info in tvDate
+        if (arr.length > 1) {
+            holder.tvCity.setText(arr[1]);
+        }
+        holder.tvDate.setText("Today");  // Giả sử bạn muốn đặt ngày hoặc thông tin khác vào tvDate
 
         holder.itemView.setOnClickListener(v -> {
             String message = "City: " + cityTime.getTenThanhPho() +
@@ -45,6 +49,19 @@ public class InternationalTimeAdapter extends RecyclerView.Adapter<International
                     ", Current Time: " + cityTime.getTime();
             Toast.makeText(context, message, Toast.LENGTH_LONG).show();
         });
+
+
+
+        holder.btnDelete.setOnClickListener(v -> {
+            // Handle delete action
+            cityTimeList.remove(position);
+            notifyItemRemoved(position);
+            notifyItemRangeChanged(position, cityTimeList.size());
+        });
+
+        holder.btnOnDelete.setOnClickListener(v -> {
+            holder.btnDelete.setVisibility( View.VISIBLE );
+        });
     }
 
     @Override
@@ -52,14 +69,22 @@ public class InternationalTimeAdapter extends RecyclerView.Adapter<International
         return cityTimeList.size();
     }
 
+    public void setEditMode(boolean isEditMode) {
+        this.isEditMode = isEditMode;
+        notifyDataSetChanged();
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvCity, tvTime, tvDate;
+        TextView tvCity, tvDate;
+        LinearLayout btnDelete;
+        ImageView btnOnDelete;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvCity = itemView.findViewById(R.id.tvCity);
-            tvTime = itemView.findViewById(R.id.tvTime);
             tvDate = itemView.findViewById(R.id.tvDate);
+            btnDelete = itemView.findViewById(R.id.btnDelete);
+            btnOnDelete = itemView.findViewById(R.id.btnOnDelete);
         }
     }
 }
